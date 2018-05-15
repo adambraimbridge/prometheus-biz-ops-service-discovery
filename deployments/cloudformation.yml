@@ -56,8 +56,8 @@ Resources:
       TaskDefinition: !Ref Task
       DesiredCount: 1
       DeploymentConfiguration:
-        MaximumPercent: 0
-        MinimumHealthyPercent: 100
+        MaximumPercent: 100
+        MinimumHealthyPercent: 0
 
   LogGroup:
     Type: AWS::Logs::LogGroup

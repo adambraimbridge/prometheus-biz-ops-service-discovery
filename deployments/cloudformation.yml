@@ -4,6 +4,13 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: >
   Biz Ops Prometheus service discovery for Operations & Reliability, runs on the existing ECS cluster.
 
+Parameters:
+
+  BizOpsApiKey:
+    Type: String
+    NoEcho: true
+
+
 Mappings:
   '027104099916':
     eu-west-1:
@@ -28,6 +35,9 @@ Resources:
           MountPoints:
             - ContainerPath: /mnt/efs/prometheus
               SourceVolume: efs-prometheus
+          Environment:
+            - Name: BIZ_OPS_API_KEY
+              Value: !Ref BizOpsApiKey
           Command:
             - --tick
             - 60s

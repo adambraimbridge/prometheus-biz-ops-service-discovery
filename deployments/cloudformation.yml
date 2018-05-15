@@ -48,7 +48,6 @@ Resources:
       DeploymentConfiguration:
         MaximumPercent: 200
         MinimumHealthyPercent: 100
-      Role: !FindInMap [!Ref "AWS::AccountId", !Ref "AWS::Region", "ServiceRole"]
 
   LogGroup:
     Type: AWS::Logs::LogGroup

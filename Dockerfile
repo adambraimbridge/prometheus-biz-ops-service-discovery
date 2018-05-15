@@ -18,4 +18,4 @@ WORKDIR /root/
 
 COPY --from=build /tmp/biz-ops-service-discovery .
 
-CMD ["/root/biz-ops-service-discovery"]
+ENTRYPOINT ["/root/biz-ops-service-discovery"]

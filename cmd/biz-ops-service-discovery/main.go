@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"path"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -62,10 +64,6 @@ func (e *Endpoint) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	if raw.HealthPath == "" {
-		raw.HealthPath = "__health"
-	}
-
 	if raw.Base == "" {
 		raw.Base = raw.ID
 	}
@@ -108,11 +106,34 @@ func writeConfiguration() {
 		return
 	}
 
-	targets := make([]PrometheusConfiguration, 1)
+	targets := make([]PrometheusConfiguration, 2)
+
+	targets[0].Labels = map[string]string{"live": "true"}
+	targets[1].Labels = map[string]string{"live": "false"}
 
 	for _, e := range endpoints {
+		url, err := url.Parse(e.URL)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"event": "ENDPOINTS_URL_PARSE_ERROR",
+				"url":   e.URL,
+				"err":   err,
+			}).Error("Failed to parse an endpoints URL from the Biz Ops API.")
+			continue
+		}
+
+		if !strings.HasSuffix(url.Path, "/__health") {
+			log.WithFields(log.Fields{
+				"event": "ENDPOINTS_URL_PARSE_ERROR",
+				"url":   e.URL,
+			}).Error("No /__health suffix defined on the endpoint.")
+			continue
+		}
+
 		if e.IsLive {
 			targets[0].Targets = append(targets[0].Targets, e.URL)
+		} else {
+			targets[1].Targets = append(targets[1].Targets, e.URL)
 		}
 	}
 
@@ -186,5 +207,4 @@ func main() {
 	log.WithFields(log.Fields{
 		"event": "STOPPED",
 	}).Info("Biz ops service discovery has stopped.")
-
 }

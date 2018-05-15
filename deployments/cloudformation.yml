@@ -1,0 +1,57 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: >
+  Biz Ops Prometheus service discovery for Operations & Reliability, runs on the existing ECS cluster.
+
+Mappings:
+  '027104099916':
+    eu-west-1:
+      VpcId: vpc-f3534591
+      Cluster: arn:aws:ecs:eu-west-1:027104099916:cluster/operations-reliability
+      ServiceRole: arn:aws:iam::027104099916:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS
+
+Resources:
+
+  Task:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Volumes:
+        - Name: efs-prometheus
+          Host:
+            SourcePath: /mnt/efs/prometheus
+      ContainerDefinitions:
+        - Name: prometheus-biz-ops-service-discovery
+          Image: nexus.in.ft.com:5000/operations-reliability/prometheus-biz-ops-service-discovery
+          Cpu: 16
+          Memory: 32
+          MountPoints:
+            - ContainerPath: /mnt/efs/prometheus
+              SourceVolume: efs-prometheus
+          Command:
+            - --tick
+            - 60s
+            - --directory
+            - /mnt/efs/prometheus/service-discovery
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+                awslogs-group: /aws/ecs/operations-reliability/prometheus-biz-ops-service-discovery
+                awslogs-region: !Ref AWS::Region
+
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !FindInMap [!Ref "AWS::AccountId", !Ref "AWS::Region", "Cluster"]
+      TaskDefinition: !Ref Task
+      DesiredCount: 1
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      Role: !FindInMap [!Ref "AWS::AccountId", !Ref "AWS::Region", "ServiceRole"]
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/ecs/operations-reliability/prometheus-biz-ops-service-discovery
+      RetentionInDays: 7

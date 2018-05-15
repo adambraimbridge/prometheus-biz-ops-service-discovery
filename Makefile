@@ -3,6 +3,7 @@ DONE = echo ">> $@ done"
 
 DOCKER_TEAM_NAME 	?= operations-reliability
 DOCKER_IMAGE_NAME   ?= prometheus-biz-ops-service-discovery
+DOCKER_TAG 			?= latest
 
 all: format build test
 
@@ -33,14 +34,14 @@ build: ## Build the binary.
 
 docker: ## Build the docker image.
 	@echo ">> building the docker image"
-	docker build -t "$(DOCKER_IMAGE_NAME):latest" .
+	docker build -t "$(DOCKER_IMAGE_NAME):$(DOCKER_TAG)" .
 	@$(DONE)
 
 docker-push: ## Push the docker image to the FT private repository.
-docker-push: docker
+docker-push:
 	@echo ">> pushing the docker image"
-	docker tag "$(DOCKER_IMAGE_NAME):latest" "nexus.in.ft.com:5000/$(DOCKER_TEAM_NAME)/$(DOCKER_IMAGE_NAME):latest"
-	docker push "nexus.in.ft.com:5000/$(DOCKER_TEAM_NAME)/$(DOCKER_IMAGE_NAME):latest"
+	docker tag "$(DOCKER_IMAGE_NAME):$(DOCKER_TAG)" "nexus.in.ft.com:5000/$(DOCKER_TEAM_NAME)/$(DOCKER_IMAGE_NAME):$(DOCKER_TAG)"
+	docker push "nexus.in.ft.com:5000/$(DOCKER_TEAM_NAME)/$(DOCKER_IMAGE_NAME):$(DOCKER_TAG)"
 	@$(DONE)
 
 help: ## Show this help message.

@@ -15,8 +15,8 @@ Prometheus then loads this file with the following configuration, watching and u
   scheme: https
   metrics_path: /scrape
   scrape_interval: 60s
-  file_sd_config:
-    files:
+  file_sd_configs:
+    - files:
       - /prometheus/service-discovery/health-check-service-discovery.json
   relabel_configs:
     - source_labels: [__address__]
@@ -33,9 +33,21 @@ Here's an example of what `health-check-service-discovery.json` might look like.
 [
   {
     "targets": [
-        "https://vault.in.ft.com/__health",
+        "https://totally-a-live-system.in.ft.com/__health",
         ...
-    ]
+    ],
+    "labels": {
+      "live": "true"
+    }
+  },
+  {
+    "targets": [
+        "https://no-wait-i-am-not-ready-system.in.ft.com/__health",
+        ...
+    ],
+    "labels": {
+      "live": "false"
+    }
   }
 ]
 ```

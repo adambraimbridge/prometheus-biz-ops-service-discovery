@@ -1,6 +1,6 @@
 FROM golang:1.10-alpine AS build
 
-WORKDIR /go/src/github.com/Financial-Times/prometheus-health-check-exporter/
+WORKDIR /go/src/github.com/Financial-Times/prometheus-biz-ops-service-discovery/
 
 RUN apk add --update --no-cache curl git && \
     curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
@@ -8,7 +8,7 @@ RUN apk add --update --no-cache curl git && \
 COPY . .
 
 RUN dep ensure && \
-    go build -o /tmp/health-check-exporter cmd/health-check-exporter/main.go
+    go build -o /tmp/biz-ops-service-discovery cmd/biz-ops-service-discovery/main.go
 
 FROM alpine:latest
 
@@ -16,6 +16,6 @@ RUN apk add --update --no-cache ca-certificates
 
 WORKDIR /root/
 
-COPY --from=build /tmp/health-check-exporter .
+COPY --from=build /tmp/biz-ops-service-discovery .
 
 CMD ["/root/biz-ops-service-discovery"]

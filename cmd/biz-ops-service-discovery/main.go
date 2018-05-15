@@ -77,6 +77,7 @@ func (e *Endpoint) UnmarshalJSON(data []byte) error {
 func writeConfiguration() {
 	req, _ := http.NewRequest(http.MethodGet, "https://api.ft.com/biz-ops/api/Endpoint", nil)
 	req.Header.Add("X-Api-Key", bizOpsAPIKey)
+	req.Header.Add("User-Agent", "prometheus-biz-ops-service-discovery")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -159,7 +160,6 @@ func main() {
 	flag.DurationVar(&tick, "tick", 60*time.Second, "Duration between background refreshes of the configuration.")
 	flag.DurationVar(&tick, "t", 60*time.Second, "")
 	flag.BoolVar(&verbose, "verbose", false, "Enable more detailed logging.")
-	flag.BoolVar(&verbose, "v", false, "")
 	flag.Parse()
 
 	if verbose {

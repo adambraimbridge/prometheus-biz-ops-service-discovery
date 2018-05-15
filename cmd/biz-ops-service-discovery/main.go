@@ -142,6 +142,10 @@ func writeConfiguration() {
 
 	filename := path.Join(directory, "health-check-service-discovery.json")
 
+	if _, err := os.Stat(directory); os.IsNotExist(err) {
+		os.MkdirAll(directory, os.ModePerm)
+	}
+
 	ioutil.WriteFile(filename, targetsJSON, 0644)
 
 	log.WithFields(log.Fields{

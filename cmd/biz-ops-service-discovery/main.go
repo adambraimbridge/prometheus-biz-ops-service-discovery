@@ -68,6 +68,10 @@ func (e *Endpoint) UnmarshalJSON(data []byte) error {
 		raw.Base = raw.ID
 	}
 
+	if raw.Scheme == "both" {
+		raw.Scheme = "https"
+	}
+
 	e.URL = fmt.Sprintf("%s://%s/%s", raw.Scheme, raw.Base, raw.HealthPath)
 	e.IsLive = raw.IsLive == "True"
 

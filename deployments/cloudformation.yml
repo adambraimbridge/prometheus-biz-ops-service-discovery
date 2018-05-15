@@ -56,7 +56,7 @@ Resources:
       TaskDefinition: !Ref Task
       DesiredCount: 1
       DeploymentConfiguration:
-        MaximumPercent: 200
+        MaximumPercent: 0
         MinimumHealthyPercent: 100
 
   LogGroup:

@@ -113,8 +113,8 @@ func writeConfiguration() {
 
 	targets := make([]PrometheusConfiguration, 2)
 
-	targets[0].Labels = map[string]string{"live": "true"}
-	targets[1].Labels = map[string]string{"live": "false"}
+	targets[0].Labels = map[string]string{"observe": "yes"}
+	targets[1].Labels = map[string]string{"observe": "no"}
 
 	for _, e := range endpoints {
 		url, err := url.Parse(e.URL)

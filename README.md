@@ -6,6 +6,8 @@ Generates configuration for use by [the Prometheus file-based service discovery]
 
 We run this process in the same ECS cluster as Prometheus, writing the configuration file to EFS.
 
+Ensure you set the `BIZ_OPS_API_KEY` environment variable.
+
 Prometheus then loads this file with the following configuration, watching and updating on any changes.
 
 ```yaml
@@ -32,7 +34,7 @@ Here's an example of what `health-check-service-discovery.json` might look like.
   {
     "targets": [
         "https://vault.in.ft.com/__health",
-        ... 
+        ...
     ]
   }
 ]

@@ -51,3 +51,12 @@ Here's an example of what `health-check-service-discovery.json` might look like.
   }
 ]
 ```
+
+## Development
+
+### CircleCI
+
+Ensure the following variables are set in the CircleCI project:
+
+* `DOCKER_REGISTRY_USERNAME`
+* `DOCKER_REGISTRY_PASSWORD`

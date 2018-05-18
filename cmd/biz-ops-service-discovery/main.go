@@ -10,7 +10,6 @@ import (
 	"os"
 	"os/signal"
 	"path"
-	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -40,46 +39,15 @@ type PrometheusConfiguration struct {
 	Labels  map[string]string `json:"labels,omitempty"`
 }
 
-type Endpoint struct {
-	URL    string
-	IsLive bool
-}
-
-func (e *Endpoint) UnmarshalJSON(data []byte) error {
-	type Alias Endpoint
-	raw := &struct {
-		ID         string `json:"id"`
-		Scheme     string `json:"protocol"`
-		Base       string `json:"base"`
-		Name       string `json:"name"`
-		HealthPath string `json:"healthSuffix"`
-		AboutPath  string `json:"aboutSuffix"`
-		IsLive     string `json:"isLive"`
-		*Alias
-	}{
-		Alias: (*Alias)(e),
-	}
-
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return err
-	}
-
-	if raw.Base == "" {
-		raw.Base = raw.ID
-	}
-
-	if raw.Scheme == "both" {
-		raw.Scheme = "https"
-	}
-
-	e.URL = fmt.Sprintf("%s://%s/%s", raw.Scheme, raw.Base, raw.HealthPath)
-	e.IsLive = raw.IsLive == "True"
-
-	return nil
+type HealthCheck struct {
+	ID         string `json:"id"`
+	LastUpdate string `json:"lastUpdate"`
+	URL        string `json:"url"`
+	IsLive     bool   `json:"isLive"`
 }
 
 func writeConfiguration() {
-	req, _ := http.NewRequest(http.MethodGet, "https://api.ft.com/biz-ops/api/Endpoint", nil)
+	req, _ := http.NewRequest(http.MethodGet, "https://api.ft.com/biz-ops/api/Healthcheck", nil)
 	req.Header.Add("X-Api-Key", bizOpsAPIKey)
 	req.Header.Add("User-Agent", "prometheus-biz-ops-service-discovery")
 
@@ -101,11 +69,11 @@ func writeConfiguration() {
 		return
 	}
 
-	var endpoints []Endpoint
-	err = json.Unmarshal(body, &endpoints)
+	var healthChecks []HealthCheck
+	err = json.Unmarshal(body, &healthChecks)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"event": "ENDPOINTS_PARSE_ERROR",
+			"event": "HEALTH_CHECKS_PARSE_ERROR",
 			"err":   err,
 		}).Error("Failed to parse the endpoints from the Biz Ops API.")
 		return
@@ -116,29 +84,21 @@ func writeConfiguration() {
 	targets[0].Labels = map[string]string{"observe": "yes"}
 	targets[1].Labels = map[string]string{"observe": "no"}
 
-	for _, e := range endpoints {
-		url, err := url.Parse(e.URL)
+	for _, healthCheck := range healthChecks {
+		_, err := url.Parse(healthCheck.URL)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"event": "ENDPOINTS_URL_PARSE_ERROR",
-				"url":   e.URL,
+				"url":   healthCheck.URL,
 				"err":   err,
 			}).Error("Failed to parse an endpoints URL from the Biz Ops API.")
 			continue
 		}
 
-		if !strings.HasSuffix(url.Path, "/__health") {
-			log.WithFields(log.Fields{
-				"event": "ENDPOINTS_URL_PARSE_ERROR",
-				"url":   e.URL,
-			}).Error("No /__health suffix defined on the endpoint.")
-			continue
-		}
-
-		if e.IsLive {
-			targets[0].Targets = append(targets[0].Targets, e.URL)
+		if healthCheck.IsLive {
+			targets[0].Targets = append(targets[0].Targets, healthCheck.URL)
 		} else {
-			targets[1].Targets = append(targets[1].Targets, e.URL)
+			targets[1].Targets = append(targets[1].Targets, healthCheck.URL)
 		}
 	}
 

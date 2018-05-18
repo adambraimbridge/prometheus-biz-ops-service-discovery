@@ -73,13 +73,14 @@ func writeConfiguration() error {
 	configuration[1].Labels = map[string]string{"observe": "no"}
 
 	for _, healthCheck := range healthChecks {
+		// Check the URL is legit, ignore it on parse errors.
 		_, err := url.Parse(healthCheck.URL)
 		if err != nil {
 			log.WithFields(log.Fields{
-				"event": "ENDPOINTS_URL_PARSE_ERROR",
+				"event": "ERROR_PARSING_HEALTH_CHECK_URL",
 				"url":   healthCheck.URL,
 				"err":   err,
-			}).Error("Failed to parse an endpoints URL from the Biz Ops API.")
+			}).Error("Failed to parse a health check URL from the Biz Ops API.")
 			continue
 		}
 
@@ -96,6 +97,8 @@ func writeConfiguration() error {
 
 	if _, err := os.Stat(directory); os.IsNotExist(err) {
 		os.MkdirAll(directory, os.ModePerm)
+	} else if err != nil {
+		return err
 	}
 
 	ioutil.WriteFile(filename, configurationJSON, 0644)

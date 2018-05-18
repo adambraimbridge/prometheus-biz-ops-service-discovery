@@ -44,7 +44,7 @@ jobs:
 
       - run:
           name: Login to the Docker repository
-          command: docker login nexus.in.ft.com:5000 --username $DOCKER_REGISTRY_USERNAME --password $DOCKER_REGISTRY_PASSWORD
+          command: echo $DOCKER_REGISTRY_PASSWORD | docker login nexus.in.ft.com:5000 --username $DOCKER_REGISTRY_USERNAME --password-stdin
 
       - run:
           name: Push the Docker image
@@ -64,7 +64,7 @@ jobs:
 
       - run:
           name: Login to the Docker repository
-          command: docker login nexus.in.ft.com:5000 --username $DOCKER_REGISTRY_USERNAME --password $DOCKER_REGISTRY_PASSWORD
+          command: echo $DOCKER_REGISTRY_PASSWORD | docker login nexus.in.ft.com:5000 --username $DOCKER_REGISTRY_USERNAME --password-stdin
 
       - run:
           name: Push the Docker image

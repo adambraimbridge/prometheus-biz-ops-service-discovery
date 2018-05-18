@@ -1,5 +1,7 @@
 # prometheus-biz-ops-service-discovery
 
+[![CircleCI](https://circleci.com/gh/Financial-Times/prometheus-biz-ops-service-discovery.svg?style=svg)](https://circleci.com/gh/Financial-Times/prometheus-biz-ops-service-discovery)
+
 🕯️ Service discovery for the O&R Prometheus system.
 
 Generates configuration for use by [the Prometheus file-based service discovery](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#%3Cfile_sd_config%3E).

@@ -39,7 +39,7 @@ Here's an example of what `health-check-service-discovery.json` might look like.
         ...
     ],
     "labels": {
-      "live": "true"
+      "observe": "yes"
     }
   },
   {
@@ -48,7 +48,7 @@ Here's an example of what `health-check-service-discovery.json` might look like.
         ...
     ],
     "labels": {
-      "live": "false"
+      "observe": "no"
     }
   }
 ]

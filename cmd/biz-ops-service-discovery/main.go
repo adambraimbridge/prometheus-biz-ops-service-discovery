@@ -101,7 +101,9 @@ func writeConfiguration() error {
 		return err
 	}
 
-	ioutil.WriteFile(filename, configurationJSON, 0644)
+	if err := ioutil.WriteFile(filename, configurationJSON, 0644); err != nil {
+		return err
+	}
 
 	log.WithFields(log.Fields{
 		"event":    "CONFIGURATION_UPDATED",

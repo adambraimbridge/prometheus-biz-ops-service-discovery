@@ -1,6 +1,6 @@
 # prometheus-biz-ops-service-discovery
 
-[![CircleCI](https://circleci.com/gh/Financial-Times/prometheus-biz-ops-service-discovery.svg?style=svg)](https://circleci.com/gh/Financial-Times/prometheus-biz-ops-service-discovery)
+![CircleCI ](https://img.shields.io/circleci/project/github/Financial-Times/prometheus-biz-ops-service-discovery/master.svg)
 
 🕯️ Service discovery for the O&R Prometheus system.
 

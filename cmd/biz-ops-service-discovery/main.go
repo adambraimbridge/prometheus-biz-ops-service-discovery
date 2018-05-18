@@ -46,43 +46,31 @@ type HealthCheck struct {
 	IsLive     bool   `json:"isLive"`
 }
 
-func writeConfiguration() {
+func writeConfiguration() error {
 	req, _ := http.NewRequest(http.MethodGet, "https://api.ft.com/biz-ops/api/Healthcheck", nil)
 	req.Header.Add("X-Api-Key", bizOpsAPIKey)
 	req.Header.Add("User-Agent", "prometheus-biz-ops-service-discovery")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"event": "BIZ_OPS_API_ERROR",
-			"err":   err,
-		}).Error("Failed to fetch endpoints from the Biz Ops API.")
-		return
+		return err
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"event": "BIZ_OPS_API_ERROR",
-			"err":   err,
-		}).Error("Failed to read the response from the Biz Ops API.")
-		return
+		return err
 	}
 
 	var healthChecks []HealthCheck
 	err = json.Unmarshal(body, &healthChecks)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"event": "HEALTH_CHECKS_PARSE_ERROR",
-			"err":   err,
-		}).Error("Failed to parse the endpoints from the Biz Ops API.")
-		return
+		return err
 	}
 
-	targets := make([]PrometheusConfiguration, 2)
+	configuration := make([]PrometheusConfiguration, 2)
 
-	targets[0].Labels = map[string]string{"observe": "yes"}
-	targets[1].Labels = map[string]string{"observe": "no"}
+	configuration[0].Labels = map[string]string{"observe": "yes"}
+	configuration[1].Labels = map[string]string{"observe": "no"}
 
 	for _, healthCheck := range healthChecks {
 		_, err := url.Parse(healthCheck.URL)
@@ -96,13 +84,13 @@ func writeConfiguration() {
 		}
 
 		if healthCheck.IsLive {
-			targets[0].Targets = append(targets[0].Targets, healthCheck.URL)
+			configuration[0].Targets = append(configuration[0].Targets, healthCheck.URL)
 		} else {
-			targets[1].Targets = append(targets[1].Targets, healthCheck.URL)
+			configuration[1].Targets = append(configuration[1].Targets, healthCheck.URL)
 		}
 	}
 
-	targetsJSON, err := json.MarshalIndent(targets, "", "  ")
+	configurationJSON, err := json.MarshalIndent(configuration, "", "  ")
 
 	filename := path.Join(directory, "health-check-service-discovery.json")
 
@@ -110,12 +98,14 @@ func writeConfiguration() {
 		os.MkdirAll(directory, os.ModePerm)
 	}
 
-	ioutil.WriteFile(filename, targetsJSON, 0644)
+	ioutil.WriteFile(filename, configurationJSON, 0644)
 
 	log.WithFields(log.Fields{
 		"event":    "CONFIGURATION_UPDATED",
 		"filename": filename,
 	}).Info("Health check targets have been updated.")
+
+	return nil
 }
 
 func main() {
@@ -163,10 +153,20 @@ func main() {
 	}).Info("Biz ops service discovery is running.")
 
 	go func() {
-		writeConfiguration()
+		if err := writeConfiguration(); err != nil {
+			log.WithFields(log.Fields{
+				"event": "ERROR_CONFIGURATION_WRITE",
+				"err":   err,
+			}).Error("Failed to write the configuration.")
+		}
 
 		for range time.NewTicker(tick).C {
-			writeConfiguration()
+			if err := writeConfiguration(); err != nil {
+				log.WithFields(log.Fields{
+					"event": "ERROR_CONFIGURATION_WRITE",
+					"err":   err,
+				}).Error("Failed to write the configuration.")
+			}
 		}
 	}()
 

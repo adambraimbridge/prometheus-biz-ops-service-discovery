@@ -6,6 +6,10 @@ Description: >
 
 Parameters:
 
+  DockerRevision:
+    Type: String
+    Default: latest
+
   BizOpsApiKey:
     Type: String
     NoEcho: true
@@ -29,9 +33,8 @@ Resources:
             SourcePath: /mnt/efs/prometheus
       ContainerDefinitions:
         - Name: prometheus-biz-ops-service-discovery
-          Image: nexus.in.ft.com:5000/operations-reliability/prometheus-biz-ops-service-discovery
-          Cpu: 16
-          Memory: 32
+          Image: !Sub "nexus.in.ft.com:5000/operations-reliability/prometheus-biz-ops-service-discovery${DockerRevision}"
+          MemoryReservation: 256
           MountPoints:
             - ContainerPath: /mnt/efs/prometheus
               SourceVolume: efs-prometheus

@@ -6,6 +6,11 @@ Description: >
 
 Parameters:
 
+  SplunkHecToken:
+    Type: String
+    Description: Find this at https://financialtimes.splunkcloud.com/en-GB/manager/financial_times_production/http-eventcollector.
+    NoEcho: true
+
   DockerRevision:
     Type: String
     Default: latest
@@ -13,14 +18,6 @@ Parameters:
   BizOpsApiKey:
     Type: String
     NoEcho: true
-
-
-Mappings:
-  '027104099916':
-    eu-west-1:
-      VpcId: vpc-f3534591
-      Cluster: arn:aws:ecs:eu-west-1:027104099916:cluster/operations-reliability
-      ServiceRole: arn:aws:iam::027104099916:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS
 
 Resources:
 
@@ -33,7 +30,7 @@ Resources:
             SourcePath: /mnt/efs/prometheus
       ContainerDefinitions:
         - Name: prometheus-biz-ops-service-discovery
-          Image: !Sub "nexus.in.ft.com:5000/operations-reliability/prometheus-biz-ops-service-discovery${DockerRevision}"
+          Image: !Sub "nexus.in.ft.com:5000/operations-reliability/prometheus-biz-ops-service-discovery:${DockerRevision}"
           MemoryReservation: 256
           MountPoints:
             - ContainerPath: /mnt/efs/prometheus
@@ -47,23 +44,20 @@ Resources:
             - --directory
             - /mnt/efs/prometheus/service-discovery
           LogConfiguration:
-            LogDriver: awslogs
+            LogDriver: splunk
             Options:
-                awslogs-group: /aws/ecs/operations-reliability/prometheus-biz-ops-service-discovery
-                awslogs-region: !Ref AWS::Region
+              splunk-source: !Ref AWS::StackName
+              splunk-url: https://http-inputs-financialtimes.splunkcloud.com
+              splunk-token: !Ref SplunkHecToken
+              splunk-format: json
+              splunk-gzip: true
 
   Service:
     Type: AWS::ECS::Service
     Properties:
-      Cluster: !FindInMap [!Ref "AWS::AccountId", !Ref "AWS::Region", "Cluster"]
+      Cluster: !ImportValue "Prometheus-ECS-Cluster-Name"
       TaskDefinition: !Ref Task
       DesiredCount: 1
       DeploymentConfiguration:
         MaximumPercent: 100
         MinimumHealthyPercent: 0
-
-  LogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: /aws/ecs/operations-reliability/prometheus-biz-ops-service-discovery
-      RetentionInDays: 7

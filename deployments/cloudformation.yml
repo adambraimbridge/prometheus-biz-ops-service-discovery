@@ -49,7 +49,7 @@ Resources:
               splunk-source: !Sub "prometheus-biz-ops-service-discovery-${AWS::Region}"
               splunk-url: https://http-inputs-financialtimes.splunkcloud.com
               splunk-token: !Ref SplunkHecToken
-              splunk-format: raw
+              splunk-format: json
               splunk-gzip: true
 
   Service:

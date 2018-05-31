@@ -46,10 +46,10 @@ Resources:
           LogConfiguration:
             LogDriver: splunk
             Options:
-              splunk-source: !Ref AWS::StackName
+              splunk-source: !Sub "prometheus-biz-ops-service-discovery-${AWS::Region}"
               splunk-url: https://http-inputs-financialtimes.splunkcloud.com
               splunk-token: !Ref SplunkHecToken
-              splunk-format: json
+              splunk-format: raw
               splunk-gzip: true
 
   Service:

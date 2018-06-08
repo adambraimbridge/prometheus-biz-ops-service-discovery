@@ -106,8 +106,9 @@ func writeConfiguration() error {
 	}
 
 	log.WithFields(log.Fields{
-		"event":    "CONFIGURATION_UPDATED",
-		"filename": filename,
+		"event":       "CONFIGURATION_UPDATED",
+		"filename":    filename,
+		"targetCount": len(healthChecks),
 	}).Info("Health check targets have been updated.")
 
 	return nil

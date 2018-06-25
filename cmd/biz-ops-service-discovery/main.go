@@ -40,7 +40,7 @@ type PrometheusConfiguration struct {
 }
 
 type HealthCheck struct {
-	ID         string `json:"id"`
+	ID         string `json:"code"`
 	LastUpdate string `json:"lastUpdate"`
 	URL        string `json:"url"`
 	IsLive     bool   `json:"isLive"`

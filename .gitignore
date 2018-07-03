@@ -17,3 +17,4 @@ vendor/
 # Project binaries and files
 biz-ops-service-discovery
 !biz-ops-service-discovery/
+health-check-service-discovery.json

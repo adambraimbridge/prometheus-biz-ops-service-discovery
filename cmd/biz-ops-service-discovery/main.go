@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -39,17 +41,43 @@ type PrometheusConfiguration struct {
 	Labels  map[string]string `json:"labels,omitempty"`
 }
 
+type GraphQLResponse struct {
+	Data struct {
+		Healthchecks []HealthCheck `json:"Healthchecks"`
+	} `json:"data"`
+}
 type HealthCheck struct {
-	ID         string `json:"code"`
-	LastUpdate string `json:"lastUpdate"`
-	URL        string `json:"url"`
-	IsLive     bool   `json:"isLive"`
+	ID      string `json:"code"`
+	URL     string `json:"url"`
+	IsLive  bool   `json:"isLive"`
+	Systems []struct {
+		SystemCode string `json:"code"`
+	} `json:"monitors"`
+}
+
+type APIGatewayResponse struct {
+	Message string `json:"error"`
 }
 
 func writeConfiguration() error {
-	req, _ := http.NewRequest(http.MethodGet, "https://api.ft.com/biz-ops/api/Healthcheck", nil)
+	var query = `{
+	  Healthchecks {
+	    code,
+	    url,
+	    isLive,
+	    monitors {
+	      code
+	    }
+	  }
+	}
+	`
+	payload := map[string]string{"query": query}
+	encodedPayload, _ := json.Marshal(payload)
+	req, _ := http.NewRequest(http.MethodPost, "https://api.ft.com/biz-ops/graphql", bytes.NewBuffer(encodedPayload))
 	req.Header.Add("X-Api-Key", bizOpsAPIKey)
 	req.Header.Add("User-Agent", "prometheus-biz-ops-service-discovery")
+	req.Header.Add("client-id", "prometheus-biz-ops-service-discovery")
+	req.Header.Add("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -61,11 +89,23 @@ func writeConfiguration() error {
 		return err
 	}
 
-	var healthChecks []HealthCheck
-	err = json.Unmarshal(body, &healthChecks)
+	if resp.StatusCode != http.StatusOK {
+
+		// If not a valid response from bizops, then it might be an error from the API Gateway
+		var gatewayError APIGatewayResponse
+		err = json.Unmarshal(body, &gatewayError)
+		if err != nil {
+			return errors.New("Received " + resp.Status + " from Biz Ops: " + string(body))
+		}
+		return errors.New("API Gateway Error: " + gatewayError.Message)
+	}
+
+	responsePayload := new(GraphQLResponse)
+	err = json.Unmarshal(body, &responsePayload)
 	if err != nil {
 		return err
 	}
+	healthChecks := responsePayload.Data.Healthchecks
 
 	configuration := make([]PrometheusConfiguration, 2)
 
@@ -124,6 +164,7 @@ func main() {
 	flag.DurationVar(&tick, "tick", 60*time.Second, "Duration between background refreshes of the configuration.")
 	flag.DurationVar(&tick, "t", 60*time.Second, "")
 	flag.BoolVar(&verbose, "verbose", false, "Enable more detailed logging.")
+	flag.BoolVar(&verbose, "v", false, "")
 	flag.Parse()
 
 	if verbose {

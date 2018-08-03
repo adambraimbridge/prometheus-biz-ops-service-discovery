@@ -35,14 +35,13 @@ Resources:
       ContainerDefinitions:
         - Name: !Sub "${ServiceName}-service"
           Image: !Sub "nexus.in.ft.com:5000/operations-reliability/${ServiceName}:${DockerRevision}"
-          Command:
-            - --tick
-            - 60s
-            - --directory
-            - /mnt/efs/prometheus/service-discovery
           Environment:
             - Name: BIZ_OPS_API_KEY
               Value: !Ref BizOpsApiKey
+            - Name: TICK
+              Value: 60s
+            - Name: DIRECTORY
+              Value: /mnt/efs/prometheus/service-discovery
           DockerLabels:
             com.ft.service-name: !Sub "${ServiceName}-service"
             com.ft.service-region: !Ref "AWS::Region"

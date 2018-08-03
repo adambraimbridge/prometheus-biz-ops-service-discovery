@@ -38,4 +38,4 @@ LABEL maintainer="reliability.engineering@ft.com" \
     org.opencontainers.url="https://dewey.in.ft.com/view/system/prometheus-biz-ops-service-discovery" \
     org.opencontainers.vendor="financial-times"
 
-CMD ["/root/biz-ops-service-discovery"]
+ENTRYPOINT ["/root/biz-ops-service-discovery"]

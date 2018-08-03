@@ -43,8 +43,6 @@ Resources:
           Environment:
             - Name: BIZ_OPS_API_KEY
               Value: !Ref BizOpsApiKey
-          PortMappings:
-            - ContainerPort: !Ref ServiceHttpPort
           DockerLabels:
             com.ft.service-name: !Sub "${ServiceName}-service"
             com.ft.service-region: !Ref "AWS::Region"

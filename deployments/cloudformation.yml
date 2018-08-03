@@ -2,7 +2,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
 Description: >
-  Biz Ops Prometheus service discovery for Operations & Reliability, runs on the existing ECS cluster.
+  Health check Prometheus exporter service for Operations & Reliability, runs on the existing ECS cluster.
 
 Parameters:
 
@@ -13,7 +13,10 @@ Parameters:
 
   DockerRevision:
     Type: String
-    Default: latest
+
+  ServiceName:
+    Type: String
+    Default: "prometheus-biz-ops-service-discovery"
 
   BizOpsApiKey:
     Type: String
@@ -21,42 +24,50 @@ Parameters:
 
 Resources:
 
-  Task:
+  TaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
+      Family: !Ref ServiceName
       Volumes:
         - Name: efs-prometheus
           Host:
             SourcePath: /mnt/efs/prometheus
       ContainerDefinitions:
-        - Name: prometheus-biz-ops-service-discovery
-          Image: !Sub "nexus.in.ft.com:5000/operations-reliability/prometheus-biz-ops-service-discovery:${DockerRevision}"
-          MemoryReservation: 256
-          MountPoints:
-            - ContainerPath: /mnt/efs/prometheus
-              SourceVolume: efs-prometheus
-          Environment:
-            - Name: BIZ_OPS_API_KEY
-              Value: !Ref BizOpsApiKey
+        - Name: !Sub "${ServiceName}-service"
+          Image: !Sub "nexus.in.ft.com:5000/operations-reliability/${ServiceName}:${DockerRevision}"
           Command:
             - --tick
             - 60s
             - --directory
             - /mnt/efs/prometheus/service-discovery
+          Environment:
+            - Name: BIZ_OPS_API_KEY
+              Value: !Ref BizOpsApiKey
+          PortMappings:
+            - ContainerPort: !Ref ServiceHttpPort
+          DockerLabels:
+            com.ft.service-name: !Sub "${ServiceName}-service"
+            com.ft.service-region: !Ref "AWS::Region"
+          MemoryReservation: 256
+          MountPoints:
+            - ContainerPath: /mnt/efs/prometheus
+              SourceVolume: efs-prometheus
           LogConfiguration:
             LogDriver: splunk
             Options:
-              splunk-source: !Sub "prometheus-biz-ops-service-discovery-${AWS::Region}"
+              splunk-source: !Sub "${ServiceName}-${AWS::Region}.in.ft.com"
               splunk-url: https://http-inputs-financialtimes.splunkcloud.com
               splunk-token: !Ref SplunkHecToken
               splunk-format: json
               splunk-gzip: true
+              tag: "{{.ImageName}}/{{.ImageID}}:{{.Name}}/{{.ID}}"
+              labels: org.opencontainers.revision,org.opencontainers.created,com.ft.build-number,com.ft.service-name,com.ft.service-region
 
   Service:
     Type: AWS::ECS::Service
     Properties:
       Cluster: !ImportValue "Prometheus-ECS-Cluster-Name"
-      TaskDefinition: !Ref Task
+      TaskDefinition: !Ref TaskDefinition
       DesiredCount: 1
       DeploymentConfiguration:
         MaximumPercent: 100

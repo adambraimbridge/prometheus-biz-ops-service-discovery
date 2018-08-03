@@ -4,17 +4,18 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"flag"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
 	"path"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -24,17 +25,6 @@ var (
 	verbose      bool
 	bizOpsAPIKey string
 )
-
-const usage = `Usage of biz-ops-service-discovery:
-
---directory, -d DIRECTORY
-  The directory configuration will be written to. (default "/etc/prometheus")
-
---tick, -t DURATION
-  Duration between background refreshes of the configuration. (default 1m0s)
-
---verbose, -v
-  Enable more detailed logging.`
 
 type PrometheusConfiguration struct {
 	Targets []string          `json:"targets"`
@@ -155,19 +145,23 @@ func writeConfiguration() error {
 }
 
 func main() {
-	flag.Usage = func() {
-		fmt.Println(flag.CommandLine.Output(), usage)
-	}
 
-	flag.StringVar(&directory, "directory", "/etc/prometheus", "The directory configuration will be written to.")
-	flag.StringVar(&directory, "d", "/etc/prometheus", "")
-	flag.DurationVar(&tick, "tick", 60*time.Second, "Duration between background refreshes of the configuration.")
-	flag.DurationVar(&tick, "t", 60*time.Second, "")
-	flag.BoolVar(&verbose, "verbose", false, "Enable more detailed logging.")
-	flag.BoolVar(&verbose, "v", false, "")
-	flag.Parse()
+	viper.AutomaticEnv()
+	replacer := strings.NewReplacer("-", "_")
+	viper.SetEnvKeyReplacer(replacer)
 
-	if verbose {
+	pflag.StringP("directory", "d", "/etc/prometheus", "The directory configuration will be written to.")
+	pflag.DurationP("tick", "t", 60*time.Second, "Duration between background refreshes of the configuration.")
+	pflag.BoolP("verbose", "v", false, "Enable more detailed logging.")
+	pflag.String("biz-ops-api-key", "", "The API key to access the biz-ops API")
+	pflag.Parse()
+
+	viper.BindPFlags(pflag.CommandLine)
+
+	directory = viper.GetString("directory")
+	tick = viper.GetDuration("tick")
+
+	if viper.GetBool("verbose") {
 		log.SetLevel(log.DebugLevel)
 	}
 
@@ -175,9 +169,8 @@ func main() {
 		log.SetFormatter(&log.JSONFormatter{})
 	}
 
-	var ok bool
-	bizOpsAPIKey, ok = os.LookupEnv("BIZ_OPS_API_KEY")
-	if !ok {
+	bizOpsAPIKey = viper.GetString("biz-ops-api-key")
+	if !viper.IsSet("biz-ops-api-key") || bizOpsAPIKey == "" {
 		log.WithFields(log.Fields{
 			"event": "MISSING_ENV_VAR",
 		}).Fatal("The BIZ_OPS_API_KEY environment variable must be set.")
@@ -197,7 +190,7 @@ func main() {
 
 	log.WithFields(log.Fields{
 		"event": "STARTED",
-	}).Info("Biz ops service discovery is running.")
+	}).Info("Biz-Ops service discovery is running.")
 
 	go func() {
 		if err := writeConfiguration(); err != nil {
@@ -221,5 +214,5 @@ func main() {
 
 	log.WithFields(log.Fields{
 		"event": "STOPPED",
-	}).Info("Biz ops service discovery has stopped.")
+	}).Info("Biz-Ops service discovery has stopped.")
 }

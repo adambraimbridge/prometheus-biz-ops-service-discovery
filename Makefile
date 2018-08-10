@@ -12,7 +12,6 @@ DONE = printf '%b\n' ">> $(GREEN)$@ done ✓"
 
 DOCKER_TEAM_NAME ?= operations-reliability
 DOCKER_TAG ?= latest
-HTTP_PORT ?= 8080
 
 ifneq ("$(CIRCLE_SHA1)", "")
 VCS_SHA := $(CIRCLE_SHA1)
@@ -66,7 +65,11 @@ build: ## Build the Docker image.
 
 run: ## Run the Docker image.
 	@printf '%b\n' ">> $(TEAL)running the docker image"
-	docker run -p $(HTTP_PORT):$(HTTP_PORT) -e "BIZ_OPS_API_KEY=$(BIZ_OPS_API_KEY)" "financial-times/$(REPO_NAME):$(VCS_SHA)"
+	docker run \
+		-e DIRECTORY=out \
+		-e "BIZ_OPS_API_KEY=$(BIZ_OPS_API_KEY)" \
+		-v $(PWD)/out:/root/out \
+		"financial-times/$(REPO_NAME):$(VCS_SHA)" $(ARGS)
 	@$(DONE)
 
 publish: ## Push the docker image to the FT private repository.
@@ -86,6 +89,7 @@ deploy-stack: validate-aws-stack-command ## Create the cloudformation stack
 		--stack-name "mon-agg-ecs-service-$(REPO_NAME)" \
 		--template-file deployments/cloudformation.yml \
 		--parameter-overrides \
+			ParentClusterStackName=$(ECS_CLUSTER_NAME) \
 			SplunkHecToken=$(SPLUNK_HEC_TOKEN) \
 			BizOpsApiKey=$(BIZ_OPS_API_KEY) \
 			DockerRevision="$(DOCKER_TAG)" \

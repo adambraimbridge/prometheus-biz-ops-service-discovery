@@ -18,3 +18,5 @@ vendor/
 biz-ops-service-discovery
 !biz-ops-service-discovery/
 health-check-service-discovery.json
+
+# Test service discovery output

@@ -8,7 +8,7 @@ Generates configuration for use by [the Prometheus file-based service discovery]
 
 We run this process in the same ECS cluster as Prometheus, writing the configuration file to EFS.
 
-Ensure you set the `BIZ_OPS_API_KEY` environment variable (see https://github.com/Financial-Times/biz-ops-api for details).
+Ensure you set the `BIZ_OPS_API_KEY` environment variable (see [Biz-Ops API](https://github.com/Financial-Times/biz-ops-api) for details).
 
 Prometheus then loads this file with the following configuration, watching and updating on any changes.
 
@@ -56,7 +56,7 @@ Here's an example of what `health-check-service-discovery.json` might look like.
 
 ## Development
 
-Make sure you have an API key for the Biz-Ops API (see https://github.com/Financial-Times/biz-ops-api for details).
+Make sure you have an API key for the Biz-Ops API (see [Biz-Ops API](https://github.com/Financial-Times/biz-ops-api) for details).
 
 To build and run a docker image of the project, you'll need [make](https://www.gnu.org/software/make/) and [docker](https://www.docker.com/) to be installed. (Everything else gets installed inside the image)
 To build an image, and run the service, run:

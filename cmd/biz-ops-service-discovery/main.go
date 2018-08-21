@@ -151,7 +151,7 @@ func main() {
 	viper.SetEnvKeyReplacer(replacer)
 
 	pflag.StringP("directory", "d", "/etc/prometheus", "The directory configuration will be written to.")
-	pflag.DurationP("tick", "t", 60*time.Second, "Duration between background refreshes of the configuration.")
+	pflag.DurationP("tick", "t", time.Duration(60)*time.Second, "Duration between background refreshes of the configuration.")
 	pflag.BoolP("verbose", "v", false, "Enable more detailed logging.")
 	pflag.String("biz-ops-api-key", "", "The API key to access the biz-ops API")
 	pflag.Parse()
@@ -190,6 +190,9 @@ func main() {
 
 	log.WithFields(log.Fields{
 		"event": "STARTED",
+		"directory": directory,
+		"tick": tick.Seconds(),
+		"verbose": verbose,
 	}).Info("Biz-Ops service discovery is running.")
 
 	go func() {

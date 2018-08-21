@@ -2,7 +2,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
 Description: >
-  Health check Prometheus exporter service for Operations & Reliability, runs on the existing ECS cluster.
+  Register HealthChecks from the Biz-Ops API for Prometheus service discovery, runs on the existing ECS cluster.
 
 Parameters:
 

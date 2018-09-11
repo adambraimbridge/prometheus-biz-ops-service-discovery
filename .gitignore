@@ -20,3 +20,7 @@ biz-ops-service-discovery
 health-check-service-discovery.json
 
 # Test service discovery output
+out/
+
+# Test result output
+test-results/

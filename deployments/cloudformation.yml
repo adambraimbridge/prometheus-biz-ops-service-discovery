@@ -26,6 +26,13 @@ Parameters:
     Type: String
     NoEcho: true
 
+  ServiceHttpPort:
+    Description: >
+      The port to route http traffic from FT sources. Not exposed externally via ALB.
+      See https://github.com/Financial-Times/monitoring-aggregation-ecs/blob/master/documentation/SERVICE_DEFINITIONS.md for guidelines
+    Type: Number
+    Default: 12006
+
 Resources:
 
   TaskDefinition:
@@ -46,9 +53,12 @@ Resources:
               Value: 60s
             - Name: DIRECTORY
               Value: /mnt/efs/prometheus/service-discovery
+            - Name: PORT
+              Value: !Ref ServiceHttpPort
           DockerLabels:
             com.ft.service-name: !Sub "${ServiceName}-service"
             com.ft.service-region: !Ref "AWS::Region"
+            com.prometheus-ecs-discovery.port: !Ref ServiceHttpPort
           MemoryReservation: 256
           MountPoints:
             - ContainerPath: /mnt/efs/prometheus

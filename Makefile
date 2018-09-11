@@ -12,6 +12,7 @@ DONE = printf '%b\n' ">> $(GREEN)$@ done ✓"
 
 DOCKER_TEAM_NAME ?= operations-reliability
 DOCKER_TAG ?= latest
+PORT ?= 8080
 
 ifneq ("$(CIRCLE_SHA1)", "")
 VCS_SHA := $(CIRCLE_SHA1)
@@ -36,6 +37,13 @@ all: format build test
 test: ## Run the tests 🚀.
 	@printf '%b\n' ">> $(TEAL)running tests"
 	go test -short $(PACKAGES)
+	@$(DONE)
+
+test-report: ## Run the tests and get junit output.
+	@printf '%b\n' ">> $(TEAL)running tests"
+	go get github.com/jstemmer/go-junit-report
+	mkdir -p ./test-results/go-tests
+	go test -v $(PACKAGES) | go-junit-report -set-exit-code > ./test-results/go-tests/go-test-report.xml
 	@$(DONE)
 
 style: ## Check the formatting of the Go source code.
@@ -68,6 +76,7 @@ run: ## Run the Docker image.
 	docker run \
 		-e DIRECTORY=out \
 		-e "BIZ_OPS_API_KEY=$(BIZ_OPS_API_KEY)" \
+		-e "PORT=$(PORT)" \
 		-v $(PWD)/out:/root/out \
 		"financial-times/$(REPO_NAME):$(VCS_SHA)" $(ARGS)
 	@$(DONE)

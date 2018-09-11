@@ -61,6 +61,26 @@ func TestWrite(t *testing.T) {
 					},
 				},
 				Healthcheck{
+					ID:     "someSystemCode.check",
+					URL:    "https://url.test.com",
+					IsLive: false,
+					Systems: []System{
+						System{
+							SystemCode: "someSystemCode",
+						},
+					},
+				},
+				Healthcheck{
+					ID:     "someSystemCode.check",
+					URL:    "https://url-app.com",
+					IsLive: true,
+					Systems: []System{
+						System{
+							SystemCode: "someSystemCode",
+						},
+					},
+				},
+				Healthcheck{
 					ID:     "system2.check",
 					URL:    "https://url2.com",
 					IsLive: false,
@@ -73,10 +93,21 @@ func TestWrite(t *testing.T) {
 			expectedWrite: `[
 				{
 				    "targets": [
-						"https://url.com"
+						"https://url.com",
+						"https://url-app.com"
 					],
 					"labels": {
-						"observe": "yes"
+						"observe": "yes",
+						"system": "someSystemCode"
+					}
+				},
+				{
+				    "targets": [
+						"https://url.test.com"
+					],
+					"labels": {
+						"observe": "no",
+						"system": "someSystemCode"
 					}
 				},
 				{
@@ -84,7 +115,65 @@ func TestWrite(t *testing.T) {
 						"https://url2.com"
 					],
 					"labels": {
-						"observe": "no"
+						"observe": "no",
+						"system": "someSystemCode2"
+					}
+				}
+			]`,
+			bizOpsError: nil,
+			expectedErr: nil,
+		},
+		"successful biz-ops response should take the first system code in an array": {
+			bizOpsResponse: newGraphQLResponse([]Healthcheck{
+				Healthcheck{
+					ID:     "someSystemCode.check",
+					URL:    "https://url.com",
+					IsLive: true,
+					Systems: []System{
+						System{
+							SystemCode: "someSystemCode",
+						},
+						System{
+							SystemCode: "someSystemCode2",
+						},
+					},
+				}}),
+			expectedWrite: `[
+				{
+				    "targets": [
+						"https://url.com"
+					],
+					"labels": {
+						"observe": "yes",
+						"system": "someSystemCode"
+					}
+				}
+			]`,
+			bizOpsError: nil,
+			expectedErr: nil,
+		},
+		"successful biz-ops response should not add a system label if no systems in the response": {
+			bizOpsResponse: newGraphQLResponse([]Healthcheck{
+				Healthcheck{
+					ID:      "someSystemCode.check",
+					URL:     "https://url.com",
+					IsLive:  true,
+					Systems: []System{},
+				},
+				Healthcheck{
+					ID:      "someSystemCode.check",
+					URL:     "https://url2.com",
+					IsLive:  true,
+					Systems: []System{},
+				}}),
+			expectedWrite: `[
+				{
+				    "targets": [
+						"https://url.com",
+						"https://url2.com"
+					],
+					"labels": {
+						"observe": "yes"
 					}
 				}
 			]`,
@@ -115,17 +204,12 @@ func TestWrite(t *testing.T) {
 				}}),
 			expectedWrite: `[
 				{
-					"targets": [],
-					"labels": {
-						"observe": "yes"
-					}
-				},
-				{
 					"targets": [
 						"https://url2.com"
 					],
 					"labels": {
-						"observe": "no"
+						"observe": "no",
+						"system": "someSystemCode2"
 					}
 				}
 			]`,

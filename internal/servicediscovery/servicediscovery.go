@@ -13,9 +13,14 @@ type graphQlClient interface {
 	Query(string, interface{}) error
 }
 
+type labels struct {
+	System  string `json:"system,omitempty"`
+	Observe string `json:"observe,omitempty"`
+}
+
 type prometheusConfiguration struct {
-	Targets []string          `json:"targets"`
-	Labels  map[string]string `json:"labels,omitempty"`
+	Targets []string `json:"targets"`
+	Labels  labels   `json:"labels"`
 }
 
 type GraphQLResponse struct {
@@ -62,13 +67,11 @@ func (bizOps *BizOps) Write() error {
 
 	healthchecks := responsePayload.Data.Healthchecks
 
-	configuration := make([]prometheusConfiguration, 2)
+	configuration := make([]prometheusConfiguration, 0)
 
-	configuration[0].Targets = []string{}
-	configuration[1].Targets = []string{}
-
-	configuration[0].Labels = map[string]string{"observe": "yes"}
-	configuration[1].Labels = map[string]string{"observe": "no"}
+	var labelsToUrls = map[labels][]string{}
+	// maintain an orderd slice of keys so iteration order is stable
+	var labelsKeys = make([]labels, 0)
 
 	if len(healthchecks) == 0 {
 		err = errors.New("returned healthchecks were empty")
@@ -80,7 +83,7 @@ func (bizOps *BizOps) Write() error {
 		return err
 	}
 	for _, healthcheck := range healthchecks {
-		// Check the URL is parseable, ignore it on parse errors.
+		// check the URL is parseable, ignore it on parse errors.
 		_, err := url.ParseRequestURI(healthcheck.URL)
 		if err != nil {
 			log.WithFields(log.Fields{
@@ -91,14 +94,39 @@ func (bizOps *BizOps) Write() error {
 			continue
 		}
 
-		if healthcheck.IsLive {
-			configuration[0].Targets = append(configuration[0].Targets, healthcheck.URL)
-		} else {
-			configuration[1].Targets = append(configuration[1].Targets, healthcheck.URL)
+		var system string
+		if len(healthcheck.Systems) > 0 {
+			system = healthcheck.Systems[0].SystemCode
 		}
+		observe := "no"
+		if healthcheck.IsLive {
+			observe = "yes"
+		}
+		checkLabels := labels{
+			System:  system,
+			Observe: observe,
+		}
+
+		if len(labelsToUrls[checkLabels]) == 0 {
+			labelsToUrls[checkLabels] = make([]string, 0)
+			labelsKeys = append(labelsKeys, checkLabels)
+		}
+		labelsToUrls[checkLabels] = append(labelsToUrls[checkLabels], healthcheck.URL)
 	}
 
-	if len(configuration[0].Targets) == 0 && len(configuration[1].Targets) == 0 {
+	hasChecks := false
+	for _, l := range labelsKeys {
+		urls := labelsToUrls[l]
+		if len(urls) > 0 {
+			hasChecks = true
+		}
+		configuration = append(configuration, prometheusConfiguration{
+			Labels:  l,
+			Targets: urls,
+		})
+	}
+
+	if !hasChecks {
 		err = errors.New("processed healthchecks were empty")
 		log.WithFields(log.Fields{
 			"event":        "CONFIGURATION_EMPTY_PARSED_HEALTHCHECKS",

@@ -11,6 +11,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+
 	"github.com/Financial-Times/prometheus-biz-ops-service-discovery/internal/api"
 	"github.com/Financial-Times/prometheus-biz-ops-service-discovery/internal/server"
 	"github.com/Financial-Times/prometheus-biz-ops-service-discovery/internal/servicediscovery"
@@ -18,6 +20,20 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh/terminal"
+)
+
+var serviceDiscoveryCount = prometheus.NewCounter(
+	prometheus.CounterOpts{
+		Name: "service_discovery_writes_total",
+		Help: "Number of service discovery file writes",
+	},
+)
+
+var serviceDiscoveryFailuresCount = prometheus.NewCounter(
+	prometheus.CounterOpts{
+		Name: "service_discovery_failures_total",
+		Help: "Number of service discovery failures",
+	},
 )
 
 var (
@@ -28,6 +44,17 @@ var (
 	bizOpsBaseUrl string
 	bizOpsAPIKey  string
 )
+
+func doServiceDiscovery(bizopsDiscovery servicediscovery.BizOps) {
+	if err := bizopsDiscovery.Write(); err != nil {
+		log.WithFields(log.Fields{
+			"event": "ERROR_CONFIGURATION_WRITE",
+			"err":   err,
+		}).Error("Failed to write the configuration.")
+		serviceDiscoveryFailuresCount.Inc()
+	}
+	serviceDiscoveryCount.Inc()
+}
 
 func main() {
 
@@ -121,6 +148,9 @@ func main() {
 	}).Info("Biz-Ops service discovery is running.")
 
 	go func() {
+		prometheus.MustRegister(serviceDiscoveryCount)
+		prometheus.MustRegister(serviceDiscoveryFailuresCount)
+
 		bizopsDiscovery := servicediscovery.BizOps{
 			Writer: servicediscovery.NewFileWriter(directory, nil),
 			ApiClient: &api.BizOpsClient{
@@ -130,20 +160,10 @@ func main() {
 				APIKey: bizOpsAPIKey,
 			},
 		}
-		if err := bizopsDiscovery.Write(); err != nil {
-			log.WithFields(log.Fields{
-				"event": "ERROR_CONFIGURATION_WRITE",
-				"err":   err,
-			}).Error("Failed to write the configuration.")
-		}
+		doServiceDiscovery(bizopsDiscovery)
 
 		for range time.NewTicker(tick).C {
-			if err := bizopsDiscovery.Write(); err != nil {
-				log.WithFields(log.Fields{
-					"event": "ERROR_CONFIGURATION_WRITE",
-					"err":   err,
-				}).Error("Failed to write the configuration.")
-			}
+			doServiceDiscovery(bizopsDiscovery)
 		}
 	}()
 

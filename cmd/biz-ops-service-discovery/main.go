@@ -37,15 +37,15 @@ var serviceDiscoveryFailuresCount = prometheus.NewCounter(
 )
 
 var (
-	directory     string
-	tick          time.Duration
-	verbose       bool
-	port          int
-	bizOpsBaseUrl string
-	bizOpsAPIKey  string
+	directory        string
+	tick             time.Duration
+	verbose          bool
+	port             int
+	bizOpsAPIBaseUrl string
+	bizOpsAPIKey     string
 )
 
-func doServiceDiscovery(bizopsDiscovery servicediscovery.BizOps) {
+func doServiceDiscovery(bizopsDiscovery *servicediscovery.BizOps) {
 	if err := bizopsDiscovery.Write(); err != nil {
 		log.WithFields(log.Fields{
 			"event": "ERROR_CONFIGURATION_WRITE",
@@ -85,12 +85,12 @@ func main() {
 		log.SetFormatter(&log.JSONFormatter{})
 	}
 
-	bizOpsBaseUrl = viper.GetString("biz-ops-base-url")
+	bizOpsAPIBaseUrl = viper.GetString("biz-ops-base-url")
 
-	if _, err := url.ParseRequestURI(bizOpsBaseUrl); err != nil {
+	if _, err := url.ParseRequestURI(bizOpsAPIBaseUrl); err != nil {
 		log.WithFields(log.Fields{
 			"event": "INVALID_ENV_VAR",
-			"value": bizOpsBaseUrl,
+			"value": bizOpsAPIBaseUrl,
 		}).Fatal("The BIZ_OPS_BASE_URL config value was not a valid url.")
 	}
 
@@ -126,26 +126,20 @@ func main() {
 		close(done)
 	}()
 
-	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.WithFields(log.Fields{
+				"event":         "ERROR_STARTING",
+				"listenAddress": listenAddress,
+				"err":           err,
+			}).Fatal("Could not listen at the specified address.")
+		}
+
 		log.WithFields(log.Fields{
-			"event":         "ERROR_STARTING",
+			"event":         "STARTED",
 			"listenAddress": listenAddress,
-			"err":           err,
-		}).Fatal("Could not listen at the specified address.")
-	}
-
-	log.WithFields(log.Fields{
-		"event":         "STARTED",
-		"listenAddress": listenAddress,
-	}).Info("Metrics server is ready to handle requests.")
-
-	log.WithFields(log.Fields{
-		"event":     "STARTED",
-		"port":      port,
-		"directory": directory,
-		"tick":      tick.Seconds(),
-		"verbose":   verbose,
-	}).Info("Biz-Ops service discovery is running.")
+		}).Info("Metrics server is ready to handle requests.")
+	}()
 
 	go func() {
 		prometheus.MustRegister(serviceDiscoveryCount)
@@ -157,13 +151,23 @@ func main() {
 				Client: http.Client{
 					Timeout: 10 * time.Second,
 				},
-				APIKey: bizOpsAPIKey,
+				APIKey:  bizOpsAPIKey,
+				BaseUrl: bizOpsAPIBaseUrl,
 			},
 		}
-		doServiceDiscovery(bizopsDiscovery)
+
+		log.WithFields(log.Fields{
+			"event":     "STARTED",
+			"port":      port,
+			"directory": directory,
+			"tick":      tick.Seconds(),
+			"verbose":   verbose,
+		}).Info("Biz-Ops service discovery is running.")
+
+		doServiceDiscovery(&bizopsDiscovery)
 
 		for range time.NewTicker(tick).C {
-			doServiceDiscovery(bizopsDiscovery)
+			doServiceDiscovery(&bizopsDiscovery)
 		}
 	}()
 

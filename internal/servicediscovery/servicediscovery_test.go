@@ -123,7 +123,7 @@ func TestWrite(t *testing.T) {
 			bizOpsError: nil,
 			expectedErr: nil,
 		},
-		"successful biz-ops response should take the first system code in an array": {
+		"successful biz-ops response should add all systems in the array of monitored systems": {
 			bizOpsResponse: newGraphQLResponse([]Healthcheck{
 				Healthcheck{
 					ID:     "someSystemCode.check",
@@ -146,6 +146,15 @@ func TestWrite(t *testing.T) {
 					"labels": {
 						"observe": "yes",
 						"system": "someSystemCode"
+					}
+				},
+				{
+				    "targets": [
+						"https://url.com"
+					],
+					"labels": {
+						"observe": "yes",
+						"system": "someSystemCode2"
 					}
 				}
 			]`,

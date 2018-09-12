@@ -94,24 +94,25 @@ func (bizOps *BizOps) Write() error {
 			continue
 		}
 
-		var system string
-		if len(healthcheck.Systems) > 0 {
-			system = healthcheck.Systems[0].SystemCode
+		if len(healthcheck.Systems) == 0 {
+			healthcheck.Systems = append(healthcheck.Systems, System{SystemCode: ""})
 		}
-		observe := "no"
-		if healthcheck.IsLive {
-			observe = "yes"
-		}
-		checkLabels := labels{
-			System:  system,
-			Observe: observe,
-		}
+		for _, system := range healthcheck.Systems {
+			observe := "no"
+			if healthcheck.IsLive {
+				observe = "yes"
+			}
+			checkLabels := labels{
+				System:  system.SystemCode,
+				Observe: observe,
+			}
 
-		if len(labelsToUrls[checkLabels]) == 0 {
-			labelsToUrls[checkLabels] = make([]string, 0)
-			labelsKeys = append(labelsKeys, checkLabels)
+			if len(labelsToUrls[checkLabels]) == 0 {
+				labelsToUrls[checkLabels] = make([]string, 0)
+				labelsKeys = append(labelsKeys, checkLabels)
+			}
+			labelsToUrls[checkLabels] = append(labelsToUrls[checkLabels], healthcheck.URL)
 		}
-		labelsToUrls[checkLabels] = append(labelsToUrls[checkLabels], healthcheck.URL)
 	}
 
 	hasChecks := false

@@ -69,7 +69,7 @@ _security-login:
 
 _security-login-web: ## Login to snyk if not on CI.
 	@printf '%b\n' ">> $(TEAL)Not on CI, logging into Snyk"
-	snyk auth
+	npx snyk auth
 
 ifeq ($(CI),)
 _security-login: _security-login-web
@@ -77,12 +77,12 @@ endif
 
 _security-dependencies: _security-login ## Scan dependencies for security vulnerabilities.
 	@printf '%b\n' ">> $(TEAL)scanning dependencies for vulnerabilities"
-	snyk test --org=reliability-engineering
+	npx snyk test --org=reliability-engineering
 	@$(DONE)
 
 _security-docker: _security-login ## Scan docker images for vulnerabilities.
 	@printf '%b\n' ">> $(TEAL)scanning docker images for vulnerabilities"
-	snyk test --org=reliability-engineering --docker "financial-times/$(REPO_NAME):$(VCS_SHA)" --file=./Dockerfile
+	npx snyk test --org=reliability-engineering --docker "financial-times/$(REPO_NAME):$(VCS_SHA)" --file=./Dockerfile
 	@$(DONE)
 
 .PHONY: security-monitor
@@ -91,12 +91,13 @@ security-monitor: _security-dependencies-monitor _security-docker-monitor
 
 _security-dependencies-monitor: ## Update snyk monitored dependencies.
 	@printf '%b\n' ">> $(TEAL)updating snyk dependencies"
-	snyk monitor --org=reliability-engineering
+	npx snyk monitor --org=reliability-engineering
 	@$(DONE)
 
 _security-docker-monitor: ## Update snyk monitored docker image.
 	@printf '%b\n' ">> $(TEAL)updating snyk docker image"
-	snyk monitor --org=reliability-engineering --docker "nexus.in.ft.com:5000/$(DOCKER_TEAM_NAME)/$(REPO_NAME):$(DOCKER_TAG)" --file=./Dockerfile
+	docker tag "financial-times/$(REPO_NAME):$(VCS_SHA)" "nexus.in.ft.com:5000/$(DOCKER_TEAM_NAME)/$(REPO_NAME):$(DOCKER_TAG)"
+	npx snyk monitor --org=reliability-engineering --docker "nexus.in.ft.com:5000/$(DOCKER_TEAM_NAME)/$(REPO_NAME):$(DOCKER_TAG)" --file=./Dockerfile
 	@$(DONE)
 
 build: ## Build the Docker image.

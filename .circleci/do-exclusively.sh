@@ -2,6 +2,7 @@
 
 # Modified version of https://github.com/bellkev/circle-lock-test/blob/4b6ba09dda539f8051f1b6beb72d427f5fa34e19/do-exclusively
 # which actually checks the tag sha, rather than expecting it in the commit message
+# also adds workflow job option
 
 # sets $branch, $tag, $rest
 parse_args() {
@@ -9,6 +10,7 @@ parse_args() {
         case $1 in
             -b|--branch) branch="$2" ;;
             -t|--tag) tag="$2" ;;
+            -j|--job) job="$2" ;;
             *) break ;;
         esac
         shift 2
@@ -16,7 +18,7 @@ parse_args() {
     rest=("$@")
 }
 
-# reads $branch, $tag
+# reads $branch, $tag, $job
 should_skip() {
     if [[ "$branch" && "$CIRCLE_BRANCH" != "$branch" ]]; then
         echo "Not on branch $branch. Skipping..."
@@ -28,10 +30,15 @@ should_skip() {
         return 0
     fi
 
+    if [[ "$job" && "$CIRCLE_JOB" != "$job" ]]; then
+        echo "Not running workflow job $job. Skipping..."
+        return 0
+    fi
+
     return 1
 }
 
-# reads $branch, $tag
+# reads $branch, $tag, $job
 # sets $jq_prog
 make_jq_prog() {
     local jq_filters=""
@@ -45,6 +52,10 @@ make_jq_prog() {
         jq_filters+=" and .vcs_revision == \"$tag_sha\""
     fi
 
+    if [[ $job ]]; then
+        jq_filters+=" and .workflows.job_name == \"$job\""
+    fi
+
     jq_prog=".[] | select(.build_num < $CIRCLE_BUILD_NUM and (.status | test(\"running|pending|queued\")) $jq_filters) | .build_num"
 }
 
@@ -56,6 +67,7 @@ set -o pipefail
 
     branch=""
     tag=""
+    job=""
     rest=()
     api_url="https://circleci.com/api/v1.1/project/github/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME?circle-token=$CIRCLE_TOKEN&limit=100"
 

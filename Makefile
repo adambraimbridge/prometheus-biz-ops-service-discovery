@@ -142,6 +142,7 @@ deploy-stack: validate-aws-stack-command ## Create the cloudformation stack
 			SplunkHecToken=$(SPLUNK_HEC_TOKEN) \
 			BizOpsApiKey=$(BIZ_OPS_API_KEY) \
 			DockerRevision="$(DOCKER_TAG)" \
+		--role-arn "arn:aws:iam::442980623726:role/FTDeployRoleFor_mon-agg-ecs-cfn" \
 		--no-fail-on-empty-changeset \
 		--tags \
         	environment="p" \

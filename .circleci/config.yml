@@ -1,47 +1,38 @@
 version: 2.1
-references:
-  working_directory: &working_directory
-    /go/src/github.com/Financial-Times/prometheus-biz-ops-service-discovery
+
+orbs:
+  aws-cli: circleci/aws-cli@0.1.13
 
 executors:
   golang:
     docker:
-      - image: circleci/golang:1.11
-    working_directory: *working_directory
+      - image: circleci/golang:1.12
   golang-node:
     docker:
-      - image: circleci/golang:1.11-node
-    working_directory: *working_directory
+      - image: circleci/golang:1.12-node
   python-node:
     docker:
       - image: circleci/python:3.7-node
 
 commands:
   install_dependencies:
-    parameters:
-      working_directory:
-        type: string
-        description: 'The working directory containing the golang project, containing the vendor folder and Gopkg.lock lockfile'
     steps:
       - restore_cache:
-          key: v1-gopkg-{{ checksum "Gopkg.lock" }}
+          key: v1-gomod-{{ checksum "go.sum" }}
 
       - run:
-          name: Install dependencies
-          command: |
-            if [ ! -d  << parameters.working_directory >>/vendor ]; then
-                dep ensure
-            fi
+          name: Download dependencies
+          command: go mod download
 
       - save_cache:
-          key: v1-gopkg-{{ checksum "Gopkg.lock" }}
+          key: v1-gomod-{{ checksum "go.sum" }}
           paths:
-            -  << parameters.working_directory >>/vendor
+            - /go/pkg/mod
 
   attach_golang_workspace:
     steps:
       - attach_workspace:
-          at: *working_directory
+          at: ~/project
 
   docker_login:
     steps:
@@ -61,8 +52,7 @@ jobs:
     steps:
       - checkout
 
-      - install_dependencies:
-          working_directory: *working_directory
+      - install_dependencies
 
       - persist_to_workspace:
           root: .
@@ -142,12 +132,8 @@ jobs:
   deploy-service:
     executor: python-node
     steps:
-      - attach_workspace:
-          at: ~/project
-
-      - run:
-          name: Install AWS CLI
-          command: sudo pip install awscli
+      - attach_golang_workspace
+      - aws-cli/install
 
       # TODO: add tests for service responsiveness before rolling out multi-region
       - run:

@@ -8,7 +8,10 @@ ENV GOPATH="/src/go"
 
 RUN apk add --update --no-cache git gcc musl-dev ca-certificates
 
-RUN addgroup -S service && adduser -D -G service service
+ARG USER_ID=500
+ARG GROUP_ID=500
+
+RUN addgroup -g $GROUP_ID -S service && adduser -u $USER_ID -D -G service service
 
 COPY go.mod go.sum ./
 

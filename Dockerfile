@@ -8,8 +8,8 @@ ENV GOPATH="/src/go"
 
 RUN apk add --update --no-cache git gcc musl-dev ca-certificates
 
-ARG USER_ID=500
-ARG GROUP_ID=500
+ARG USER_ID=700
+ARG GROUP_ID=700
 
 RUN addgroup -g $GROUP_ID -S service && adduser -u $USER_ID -D -G service service
 

@@ -195,7 +195,7 @@ workflows:
             branches:
               only:
                 - master
-        - change-api/release-log:
+      - change-api/release-log:
           context: monitoring-agg-ecs-prod
           requires:
             - deploy-service

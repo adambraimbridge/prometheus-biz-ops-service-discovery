@@ -29,7 +29,7 @@ Prometheus then loads this file with the following configuration, watching and u
         replacement: prometheus-health-check-exporter.in.ft.com
 ```
 
-Here's an example of what `health-check-service-discovery.json` might look like.
+Here's an example of what `health-check-service-discovery.json` might look like. The `observe` label is set based on the `isLive` field in Biz Ops, `isLive: true` maps to `observe="yes"`.
 
 ```json
 [

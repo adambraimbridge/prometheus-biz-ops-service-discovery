@@ -2,7 +2,7 @@ version: 2.1
 
 orbs:
   aws-cli: circleci/aws-cli@0.1.13
-  change-api: financial-times/change-api@0.22.0
+  change-api: financial-times/change-api@0.23.0
 
 executors:
   golang:

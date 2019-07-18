@@ -61,9 +61,9 @@ Resources:
             com.ft.service-name: !Sub "${ServiceName}-service"
             com.ft.service-region: !Ref "AWS::Region"
             com.prometheus-ecs-discovery.port: !Ref ServiceHttpPort
-          Cpu: 10
-          MemoryReservation: 48
-          Memory: 128
+          Cpu: 4
+          MemoryReservation: 24
+          Memory: 96
           MountPoints:
             - ContainerPath: /mnt/efs/prometheus
               SourceVolume: efs-prometheus

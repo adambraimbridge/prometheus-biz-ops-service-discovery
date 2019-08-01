@@ -86,9 +86,9 @@ Diagram for the exporter:
 
 ![prometheus-biz-ops-service-discovery-architecture-diagram](./architecture/prometheus-biz-ops-service-discovery-architecture.png)
 
-[View in Lucidchart](https://www.lucidchart.com/invitations/accept/f02d65df-fa2f-4042-b899-0ed0995ebece).
+[View in Lucidchart](https://www.lucidchart.com/invitations/accept/9c3cc798-ee92-4750-a35e-827ed5d430f8.
 
-Note: This setup is mirrored in `eu-west-1` and `us-east-1` regions, and fronted by a Dyn GSLB.
+Note: This setup is mirrored in `eu-west-1` and `us-east-1` regions.
 
 ## Failover Architecture Type
 

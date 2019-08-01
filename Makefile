@@ -78,20 +78,17 @@ _security-login: _security-login-web
 endif
 
 _security-dependencies: _security-login ## Scan dependencies for security vulnerabilities.
-	# TODO: enable once snyk support go modules
-	# @printf '%b\n' ">> $(TEAL)scanning dependencies for vulnerabilities"
-	# npx snyk test --org=reliability-engineering
-	# @$(DONE)
+	@printf '%b\n' ">> $(TEAL)scanning dependencies for vulnerabilities"
+	npx snyk test --org=reliability-engineering
+	@$(DONE)
 
 .PHONY: security-monitor
 security-monitor: ## Update latest monitored dependencies in snyk. Needs to be run in an environment with the snyk CLI tool.
 security-monitor: _security-dependencies-monitor
 
 _security-dependencies-monitor: ## Update snyk monitored dependencies.
-	# TODO: enable once snyk support go modules
-	# @printf '%b\n' ">> $(TEAL)updating snyk dependencies"
-	# npx snyk monitor --org=reliability-engineering
-	# @$(DONE)nitor --org=reliability-engineering --docker "nexus.in.ft.com:5000/$(DOCKER_TEAM_NAME)/$(REPO_NAME):$(DOCKER_TAG)" --file=./Dockerfile
+	@printf '%b\n' ">> $(TEAL)updating snyk dependencies"
+	npx snyk monitor --org=reliability-engineering
 	@$(DONE)
 
 build: ## Build the Docker image.

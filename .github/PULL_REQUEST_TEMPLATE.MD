@@ -1,26 +1,19 @@
-## What has changed?
-
-Please be specific, and try to describe your thought process, and state the 'obvious' – things are almost never obvious.
-
 ## Why?
 
-Why were these changes necessary? You could copy the text of the original Trello/Jira ticket (if there is one) in here, with a link back to it for the curious.
+-   Copy (if there is one) the text of the original Trello/ Jira ticket in here, with a link back to it for the curious.
+-   What's the main motivation of this work? New feature, bug fix, tech debt ... ?
 
-## Anything in particular you'd like to highlight to reviewers?
+## What?
 
-Complex or controversial changes & any other information here.
+-   Please be specific and try to describe your thought process.
+-   State the obvious, since this might be the first time the reviewer is looking at the code.
+-   Include screenshots of the change if relevant.
+-   Remember to update the documentation if relevant.
 
-## Scope and particulars of this PR (Please tick all that apply)
+### Anything in particular you'd like to highlight to reviewers?
 
-- [ ] Tech hygiene (dependency updating & other tech debt)
-- [ ] Bug fix
-- [ ] Feature
-- [ ] Documentation / Runbook update
-- [ ] Breaking change
-- [ ] Minor change (e.g. fixing a typo, adding config)
-- [ ] Review not required
+Mention here sections of code which you would like reviewers to pay extra attention to, for example:
 
-## Reviewer checklist
-
-- [ ] Check this box if you feel you fully understand this PR
-- [ ] Has the documentation been updated (if applicable)?
+_Would appreciate a second pair of eyes on the test_  
+_I am not quite sure how this bit works_  
+_Is there a better module I can use or approach I can take to achieve X_

@@ -37,7 +37,7 @@ Check whether the [Amazon CloudWatch is available](https://status.aws.amazon.com
 
 The exporter can be accessed directly either via the [Dyn GSLB](https://prometheus-biz-ops-service-discovery.in.ft.com) or in the [EU](https://prometheus-biz-ops-service-discovery-eu-west-1.in.ft.com) or [US](https://prometheus-biz-ops-service-discovery-us-east-1.in.ft.com) specifically.
 
-A few useful queries can be ran to determine what the exporter is returning, if anything. These can be run either in the [Prometheus console](http://prometheus.in.ft.com/) or the [Grafana explore UI](https://grafana.ft.com/explore?left=%5B%22now-6h%22,%22now%22,%22Operations%20%26%20Reliability%20Prometheus%22,%7B%7D,%7B%22ui%22:%5Btrue,true,true,%22none%22%5D%7D%5D).
+A few useful queries can be ran to determine what the exporter is returning, if anything. These can be run either in the [Prometheus console](http://prometheus.monitoring.ftops.tech/) or the [Grafana explore UI](https://grafana.ft.com/explore?left=%5B%22now-6h%22,%22now%22,%22Operations%20%26%20Reliability%20Prometheus%22,%7B%7D,%7B%22ui%22:%5Btrue,true,true,%22none%22%5D%7D%5D).
 
 The percentage of service discovery configuration writes which failed (this should be 0) can be fetched using the query
 
@@ -51,13 +51,13 @@ View the generic troubleshooting information for the AWS ECS cluster (including 
 
 The service discovery file is written to persistent storage (AWS EFS) so any failures in writing the file are not critical to the scraping of healthchecks providing the file still exists and is readable by Prometheus.]
 
-It may be useful to view the latest targets Prometheus has read from the written config file using the targets interface for the [EU](https://prometheus-eu-west-1.in.ft.com/targets#job-health_check) and [US](https://prometheus-us-east-1.in.ft.com/targets#job-health_check) prometheus instances.
+It may be useful to view the latest targets Prometheus has read from the written config file using the targets interface for the [EU](https://prometheus-eu-west-1.monitoring.ftops.tech/targets#job-health_check) and [US](https://prometheus-us-east-1.monitoring.ftops.tech/targets#job-health_check) prometheus instances.
 
 ## Bespoke Monitoring
 
 The Heimdall Prometheus has some bespoke alarms which are sent to the [#rel-eng-alerts](https://financialtimes.slack.com/messages/C8QL0GY9J) Slack via alertmanager.
 
-These are visible in the [Alertmanager UI](https://alertmanager.in.ft.com/) if they are firing.
+These are visible in the [Alertmanager UI](https://alertmanager.monitoring.ftops.tech/) if they are firing.
 
 There are several Grafana dashboards:
 
